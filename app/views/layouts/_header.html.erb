@@ -1,0 +1,20 @@
+<%= link_to image_tag('/assets/tripomatic1.jpg', width: 100,), tripomatic_index_path %>
+<div class="dropdown">
+  <% if user_signed_in? %>
+  <a class="dropdown-toggle" data-toggle="dropdown" href="#"><h4><i class="icon-user icon-white"></i>  <%= current_user.name %></h4></a>
+    <% else %>
+<a class="dropdown-toggle" data-toggle="dropdown" href="#"><input type="button" value="Sign in / Join"></a>
+
+    <% end %>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+    <% if user_signed_in? %>
+      <li><%= link_to 'My trips' %></li>
+      <li><%= link_to 'Account setting', edit_user_registration_path %></li>
+      <li><%= link_to 'sign_out', destroy_user_session_path, :method => :delete  %></li>
+    <% else %>
+      <li><%= link_to 'Sign in', new_user_session_path %></li>
+      <li><%= link_to image_tag('/assets/Facebook-logo.png', width: 70), 'https://www.facebook.com/TripomaticCom' %></li>
+      <li><%= link_to image_tag('/assets/GooglePlus.png', width: 70), 'https://plus.google.com/+Tripomatic/posts'%></li>
+    <% end %>
+  </ul>
+</div>

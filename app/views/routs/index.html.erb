@@ -1,0 +1,35 @@
+<h1>Listing routs</h1>
+
+<table>
+  <tr>
+    <th>User</th>
+    <th>Latitude</th>
+    <th>Longitude</th>
+    <th>Address</th>
+    <th>Description</th>
+    <th>Title</th>
+    <th>User</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @routs.each do |rout| %>
+  <tr>
+    <td><%= rout.user %></td>
+    <td><%= rout.latitude %></td>
+    <td><%= rout.longitude %></td>
+    <td><%= rout.address %></td>
+    <td><%= rout.description %></td>
+    <td><%= rout.title %></td>
+    <td><%= rout.user_id %></td>
+    <td><%= link_to 'Show', rout %></td>
+    <td><%= link_to 'Edit', edit_rout_path(rout) %></td>
+    <td><%= link_to 'Destroy', rout, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Rout', new_rout_path %>
