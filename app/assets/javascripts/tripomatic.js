@@ -62,8 +62,10 @@ var countries = {
 
 function initialize() {
     var myOptions = {
-        zoom: countries['us'].zoom,
-        center: countries['us'].center,
+//        zoom: countries['us'].zoom,
+        zoom: 16,
+//        center: countries['us'].center,
+        center: new google.maps.LatLng(47.651743, -122.349243),
         mapTypeControl: false,
         panControl: false,
         zoomControl: false,
@@ -72,8 +74,8 @@ function initialize() {
 
     map = new google.maps.Map(document.getElementById('map-canvas'), myOptions);
 
-//    var panoramioLayer = new google.maps.panoramio.PanoramioLayer();
-//    panoramioLayer.setMap(map);
+    var panoramioLayer = new google.maps.panoramio.PanoramioLayer();
+    panoramioLayer.setMap(map);
 
     var transitLayer = new google.maps.TransitLayer();  //дороги
     transitLayer.setMap(map);
@@ -140,8 +142,6 @@ function search() {
 //                var markerLetter = String.fromCharCode('A'.charCodeAt(0) + i);
                 var markerIcon = MARKER_PATH + '.png';
                 // Use marker animation to drop the icons incrementally on the map.
-//                var panoramioLayer = new google.maps.panoramio.PanoramioLayer();
-//                panoramioLayer.setMap(results[i].geometry.location);
                 markers[i] = new google.maps.Marker({
                     position: results[i].geometry.location,
                     animation: google.maps.Animation.DROP,
