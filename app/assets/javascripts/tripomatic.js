@@ -1,31 +1,3 @@
-//window.onload = function () {
-
-//    var directionsDisplay = new google.maps.DirectionsRenderer();
-//    var directionsService = new google.maps.DirectionsService();
-//
-//    function calcRoute() {
-//        var origin = new google.maps.LatLng(40.850033, -87.6500523);
-//        var destination = new google.maps.LatLng(42.850033, -85.6500523);
-////        var destination1 = new google.maps.LatLng(43.850033, -85.6500523);
-//
-//        var request = {
-//            origin: origin,
-//            destination: destination,
-//            travelMode: google.maps.TravelMode.DRIVING
-//        };
-//        directionsService.route(request, function (response, status) {
-//            if (status == google.maps.DirectionsStatus.OK) {
-//                directionsDisplay.setDirections(response);
-//            }
-//        });
-//    }
-//
-//    calcRoute();
-//
-//    var handler = Gmaps.build('Google');
-//    handler.buildMap({ internal: {id: 'directions'}}, function () {
-//        directionsDisplay.setMap(handler.getMap());
-//    });
 var map, places, infoWindow;
 var markers = [];
 var autocomplete;
@@ -99,17 +71,17 @@ function initialize() {
     };
 
     map = new google.maps.Map(document.getElementById('map-canvas'), myOptions);
-    // дороги
-    var transitLayer = new google.maps.TransitLayer();
-    transitLayer.setMap(map);
-//
-    var photoPanel = document.getElementById('photo-panel');
-    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(photoPanel);
 
+//    var panoramioLayer = new google.maps.panoramio.PanoramioLayer();
+//    panoramioLayer.setMap(map);
+
+    var transitLayer = new google.maps.TransitLayer();  //дороги
+    transitLayer.setMap(map);
 
     infoWindow = new google.maps.InfoWindow({
         content: document.getElementById('info-content')
     });
+
 
     // Create the autocomplete object and associate it with the UI input control.
     // Restrict the search to the default country, and to place type "cities".
@@ -119,19 +91,21 @@ function initialize() {
             types: ['(cities)'],
             componentRestrictions: countryRestrict
         });
-    places = new google.maps.places.PlacesService(map);
 
+    places = new google.maps.places.PlacesService(map);
     google.maps.event.addListener(autocomplete, 'place_changed', onPlaceChanged);
 
     // Add a DOM event listener to react when the user selects a country.
     google.maps.event.addDomListener(document.getElementById('country'), 'change',
         setAutocompleteCountry);
-}
 
+}
 // When the user selects a city, get the place details for the city and
 // zoom the map in on the city.
+
 function onPlaceChanged() {
     var place = autocomplete.getPlace();
+    console.log(place.geometry.location)
     if (place.geometry) {
         map.panTo(place.geometry.location);
         map.setZoom(15);
@@ -141,15 +115,22 @@ function onPlaceChanged() {
     }
 
 }
-
+var typePlace = 'lodging'
+$(document).ready(function () {
+    $('#id_places li').on('click', function () {
+        typePlace = $(this).attr('value')
+        search();
+    });
+})
 // Search for hotels in the selected city, within the viewport of the map.
 function search() {
     var search = {
         bounds: map.getBounds(),
-        types: ['lodging']
+        types: [typePlace]
     };
 
     places.nearbySearch(search, function (results, status) {
+
         if (status == google.maps.places.PlacesServiceStatus.OK) {
             clearResults();
             clearMarkers();
@@ -157,8 +138,10 @@ function search() {
             // assign a letter of the alphabetic to each marker icon.
             for (var i = 0; i < results.length; i++) {
 //                var markerLetter = String.fromCharCode('A'.charCodeAt(0) + i);
-                var markerIcon = MARKER_PATH  + '.png';
+                var markerIcon = MARKER_PATH + '.png';
                 // Use marker animation to drop the icons incrementally on the map.
+//                var panoramioLayer = new google.maps.panoramio.PanoramioLayer();
+//                panoramioLayer.setMap(results[i].geometry.location);
                 markers[i] = new google.maps.Marker({
                     position: results[i].geometry.location,
                     animation: google.maps.Animation.DROP,
@@ -170,10 +153,12 @@ function search() {
                 google.maps.event.addListener(markers[i], 'click', showInfoWindow);
                 setTimeout(dropMarker(i), i * 100);
                 addResult(results[i], i);
+//                google.maps.event.addListener(markers[i], 'mouseout', closeInfoWindow);
             }
         }
     });
 }
+
 
 function clearMarkers() {
     for (var i = 0; i < markers.length; i++) {
@@ -253,8 +238,14 @@ function showInfoWindow() {
         });
 }
 
+function closeInfoWindow() {
+    var marker = this;
+    infoWindow.close(map, marker);
+}
+
 // Load the place information into the HTML elements used by the info window.
 function buildIWContent(place) {
+//    console.log(place)
     document.getElementById('iw-icon').innerHTML = '<img class="hotelIcon" ' +
         'src="' + place.icon + '"/>';
     document.getElementById('iw-url').innerHTML = '<b><a href="' + place.url +
