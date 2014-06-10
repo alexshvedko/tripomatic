@@ -4,6 +4,8 @@ var autocomplete;
 var countryRestrict = { 'country': 'us' };
 var MARKER_PATH = 'https://maps.gstatic.com/intl/en_us/mapfiles/marker_green';
 var hostnameRegexp = new RegExp('^https?://.+?/');
+var directionsDisplay;
+var directionsService = new google.maps.DirectionsService();
 
 var countries = {
     'au': {
@@ -62,20 +64,17 @@ var countries = {
 
 function initialize() {
     var myOptions = {
-//        zoom: countries['us'].zoom,
-        zoom: 16,
-//        center: countries['us'].center,
+        zoom: countries['us'].zoom,
+        center: countries['us'].center,
         center: new google.maps.LatLng(47.651743, -122.349243),
         mapTypeControl: false,
         panControl: false,
         zoomControl: false,
         streetViewControl: false
     };
-
+    directionsDisplay = new google.maps.DirectionsRenderer();
     map = new google.maps.Map(document.getElementById('map-canvas'), myOptions);
-
-    var panoramioLayer = new google.maps.panoramio.PanoramioLayer();
-    panoramioLayer.setMap(map);
+    directionsDisplay.setMap(map);
 
     var transitLayer = new google.maps.TransitLayer();  //дороги
     transitLayer.setMap(map);
@@ -107,7 +106,6 @@ function initialize() {
 
 function onPlaceChanged() {
     var place = autocomplete.getPlace();
-    console.log(place.geometry.location)
     if (place.geometry) {
         map.panTo(place.geometry.location);
         map.setZoom(15);
@@ -147,17 +145,63 @@ function search() {
                     animation: google.maps.Animation.DROP,
                     icon: markerIcon
                 });
-                // If the user clicks a hotel marker, show the details of that hotel
-                // in an info window.
                 markers[i].placeResult = results[i];
-                google.maps.event.addListener(markers[i], 'click', showInfoWindow);
+                google.maps.event.addListener(markers[i], 'click', function (e) {
+                    saveCooordinate(e)
+                })
+                google.maps.event.addListener(markers[i], 'click', showInfoWindow)
                 setTimeout(dropMarker(i), i * 100);
                 addResult(results[i], i);
-//                google.maps.event.addListener(markers[i], 'mouseout', closeInfoWindow);
             }
+//                google.maps.event.addListener(markers[i], 'mouseout', closeInfoWindow);
+            // If the user clicks a hotel marker, show the details of that hotel
+            // in an info window.
         }
     });
 }
+
+
+function saveCooordinate(e) {
+    var origin = new google.maps.LatLng(e.latLng.k, e.latLng.A)
+    var destination = new google.maps.LatLng(40.732888, -74.067365)
+    var request = {
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING
+    };
+    directionsService.route(request, function (response, status) {
+        if (status == google.maps.DirectionsStatus.OK) {
+            directionsDisplay.setDirections(response);
+        }
+    });
+
+//    var origin = null
+//    var destination = null
+////    if (origin == null) {
+//        origin = new google.maps.LatLng(e.latLng.k, e.latLng.A);
+////        console.log('marker2', origin, destination)
+////    } else {
+//        destination = new google.maps.LatLng(40.732888, -74.067365);
+//        console.log('marker3', origin, destination)
+////    }
+//    var request = {
+//        origin: origin,
+//        destination: destination,
+//        travelMode: google.maps.TravelMode.DRIVING
+//    };
+//    directionsService.route(request, function (response, status) {
+//        if (status == google.maps.DirectionsStatus.OK) {
+//            directionsDisplay.setDirections(response);
+//        }
+//    });
+}
+
+//saveCooordinate(e);
+//
+//var handler = Gmaps.build('Google');
+//handler.buildMap({ internal: {id: 'map-canvas'}}, function () {
+//    directionsDisplay.setMap(handler.getMap());
+//});
 
 
 function clearMarkers() {
@@ -228,6 +272,7 @@ function clearResults() {
 // anchored on the marker for the hotel that the user selected.
 function showInfoWindow() {
     var marker = this;
+    console.log('marker1', marker)
     places.getDetails({reference: marker.placeResult.reference},
         function (place, status) {
             if (status != google.maps.places.PlacesServiceStatus.OK) {
@@ -245,13 +290,11 @@ function closeInfoWindow() {
 
 // Load the place information into the HTML elements used by the info window.
 function buildIWContent(place) {
-//    console.log(place)
     document.getElementById('iw-icon').innerHTML = '<img class="hotelIcon" ' +
         'src="' + place.icon + '"/>';
     document.getElementById('iw-url').innerHTML = '<b><a href="' + place.url +
         '">' + place.name + '</a></b>';
     document.getElementById('iw-address').textContent = place.vicinity;
-
     if (place.formatted_phone_number) {
         document.getElementById('iw-phone-row').style.display = '';
         document.getElementById('iw-phone').textContent =
@@ -295,5 +338,6 @@ function buildIWContent(place) {
 
 }
 
+google.maps.event.addDomListener(window, 'load', initialize);
 
 //};
