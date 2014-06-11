@@ -149,60 +149,99 @@ function search() {
                 google.maps.event.addListener(markers[i], 'click', function (e) {
                     saveCooordinate(e)
                 })
-                google.maps.event.addListener(markers[i], 'click', showInfoWindow)
+                google.maps.event.addListener(markers[i], 'mouseover', showInfoWindow)
+                google.maps.event.addListener(markers[i], 'mouseout', closeInfoWindow);
                 setTimeout(dropMarker(i), i * 100);
                 addResult(results[i], i);
             }
-//                google.maps.event.addListener(markers[i], 'mouseout', closeInfoWindow);
-            // If the user clicks a hotel marker, show the details of that hotel
+//            If the user clicks a hotel marker, show the details of that hotel
             // in an info window.
         }
     });
 }
 
 
+var start = {};
+var end = {};
+var waypts = [];
+var placesArray = [];
+var x = {}
 function saveCooordinate(e) {
-    var origin = new google.maps.LatLng(e.latLng.k, e.latLng.A)
-    var destination = new google.maps.LatLng(40.732888, -74.067365)
-    var request = {
-        origin: origin,
-        destination: destination,
-        travelMode: google.maps.TravelMode.DRIVING
-    };
+    console.log(new google.maps.LatLng(e.latLng.k, e.latLng.A))
+    placesArray.push(new google.maps.LatLng(e.latLng.k, e.latLng.A));
+    console.log('placeArray', placesArray[0])
+    console.log('placeArray.last', placesArray[placesArray.length - 1])
+    if (placesArray.length == 2) {
+        var request = {
+            origin: placesArray[0],
+            destination: placesArray[placesArray.length - 1],
+            travelMode: google.maps.TravelMode.DRIVING
+        }
+    } else {
+        for (var i = 1; i < placesArray.length - 1; i++) {
+            waypts.push({
+                location: placesArray[i],
+                stopover: true
+            });
+        }
+        var request = {
+            origin: placesArray[0],
+            destination: placesArray[placesArray.length - 1],
+            waypoints: waypts,
+            optimizeWaypoints: true,
+            travelMode: google.maps.TravelMode.DRIVING
+        };
+    }
     directionsService.route(request, function (response, status) {
         if (status == google.maps.DirectionsStatus.OK) {
             directionsDisplay.setDirections(response);
         }
     });
 
-//    var origin = null
-//    var destination = null
-////    if (origin == null) {
-//        origin = new google.maps.LatLng(e.latLng.k, e.latLng.A);
-////        console.log('marker2', origin, destination)
-////    } else {
-//        destination = new google.maps.LatLng(40.732888, -74.067365);
-//        console.log('marker3', origin, destination)
-////    }
-//    var request = {
-//        origin: origin,
-//        destination: destination,
-//        travelMode: google.maps.TravelMode.DRIVING
-//    };
-//    directionsService.route(request, function (response, status) {
-//        if (status == google.maps.DirectionsStatus.OK) {
-//            directionsDisplay.setDirections(response);
+
+//    if (Object.keys(start).length === 0) {
+//        start = new google.maps.LatLng(e.latLng.k, e.latLng.A)
+//        console.log("start", start)
+//    } else if (Object.keys(end).length === 0) {
+//        end = new google.maps.LatLng(e.latLng.k, e.latLng.A)
+//        console.log("end", end)
+//        var request = {
+//            origin: start,
+//            destination: end,
+//            travelMode: google.maps.TravelMode.DRIVING
 //        }
-//    });
+//        directionsService.route(request, function (response, status) {
+//            if (status == google.maps.DirectionsStatus.OK) {
+//                directionsDisplay.setDirections(response);
+//            }
+//        });
+//        x = end
+//        placesArray.push(end)
+//        console.log('x', x)
+//    } else {
+//        end = new google.maps.LatLng(e.latLng.k, e.latLng.A)
+//        console.log("end1", end)
+//        for(var i = 0; i < placesArray.length; i++){
+//        waypts.push({
+//            location:  placesArray[i],
+//            stopover: true
+//        });
+//        console.log('waypts', waypts)
+//        }
+//        var request = {
+//            origin: start,
+//            destination: end,
+//            waypoints: waypts,
+//            optimizeWaypoints: true,
+//            travelMode: google.maps.TravelMode.DRIVING
+//        };
+//        directionsService.route(request, function (response, status) {
+//            if (status == google.maps.DirectionsStatus.OK) {
+//                directionsDisplay.setDirections(response);
+//            }
+//        });
+//    }
 }
-
-//saveCooordinate(e);
-//
-//var handler = Gmaps.build('Google');
-//handler.buildMap({ internal: {id: 'map-canvas'}}, function () {
-//    directionsDisplay.setMap(handler.getMap());
-//});
-
 
 function clearMarkers() {
     for (var i = 0; i < markers.length; i++) {
@@ -272,7 +311,6 @@ function clearResults() {
 // anchored on the marker for the hotel that the user selected.
 function showInfoWindow() {
     var marker = this;
-    console.log('marker1', marker)
     places.getDetails({reference: marker.placeResult.reference},
         function (place, status) {
             if (status != google.maps.places.PlacesServiceStatus.OK) {
