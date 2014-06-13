@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class RoutTest < ActiveSupport::TestCase
+class TravelsControllerTest < ActionController::TestCase
   # test "the truth" do
   #   assert true
   # end

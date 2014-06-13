@@ -1,0 +1,21 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  user: 
+  icon: MyText
+  name: MyText
+  phone_number: MyString
+  rating: 1.5
+  website: MyText
+  location_a: 1.5
+  locatio_k: 1.5
+
+two:
+  user: 
+  icon: MyText
+  name: MyText
+  phone_number: MyString
+  rating: 1.5
+  website: MyText
+  location_a: 1.5
+  locatio_k: 1.5

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140605125021) do
+ActiveRecord::Schema.define(:version => 20140613082623) do
 
   create_table "routs", :force => true do |t|
     t.integer  "user_id",     :limit => 255
@@ -25,6 +25,21 @@ ActiveRecord::Schema.define(:version => 20140605125021) do
   end
 
   add_index "routs", ["user_id"], :name => "index_routs_on_user_id"
+
+  create_table "travels", :force => true do |t|
+    t.integer  "user_id"
+    t.text     "icon"
+    t.text     "name"
+    t.string   "phone_number"
+    t.float    "rating"
+    t.text     "website"
+    t.float    "location_a"
+    t.float    "location_k"
+    t.datetime "created_at",   :null => false
+    t.datetime "updated_at",   :null => false
+  end
+
+  add_index "travels", ["user_id"], :name => "index_travels_on_user_id"
 
   create_table "users", :force => true do |t|
     t.string   "email",                  :default => "", :null => false

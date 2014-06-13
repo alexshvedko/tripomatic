@@ -1,10 +1,12 @@
 Tripomatic::Application.routes.draw do
-  resources :routs
+
+  resources :travels
 
   devise_for :users
 
   get 'tripomatic/index'
   get 'tripomatic/show'
+  get 'travels/show'
   root to: 'tripomatic#index'
 
   # The priority is based upon order of creation:
