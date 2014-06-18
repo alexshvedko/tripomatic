@@ -1,5 +1,6 @@
 function onPlaceChanged() {
-    var place = autocomplete.getPlace();
+    place = autocomplete.getPlace();
+//    console.log('sanfr', place)
     if (place.geometry) {
 // Search for hotels in the selected city, within the viewport of the map.
         map.panTo(place.geometry.location);
@@ -8,10 +9,13 @@ function onPlaceChanged() {
     } else {
         document.getElementById('autocomplete').placeholder = 'Enter a city';
     }
-// When the user selects a city, get the place details for the city and
-// zoom the map in on the city.
 
 }
+
+// When the user selects a city, get the place details for the city and
+// zoom the map in on the city.
+var place;
+var typePlace = 'bar'
 var addPlace;
 var map, places, infoWindow;
 var markers = [];
@@ -20,11 +24,12 @@ var waypts = [];
 var placesArray = [];
 var countryRestrict = { 'country': 'us' };
 var MARKER_PATH = 'https://maps.gstatic.com/intl/en_us/mapfiles/marker_green';
+var trips = {};
 var hostnameRegexp = new RegExp('^https?://.+?/');
 
 var directionsDisplay;
-
 var directionsService = new google.maps.DirectionsService();
+
 var countries = {
     'au': {
         center: new google.maps.LatLng(-25.3, 133.8),
@@ -79,7 +84,6 @@ var countries = {
         zoom: 5
     }
 };
-
 function initialize() {
     var myOptions = {
         zoom: countries['us'].zoom,
@@ -91,6 +95,7 @@ function initialize() {
         streetViewControl: false
     };
     directionsDisplay = new google.maps.DirectionsRenderer({preserveViewport: true, draggable: 1, suppressMarkers: 1});
+
     map = new google.maps.Map(document.getElementById('map-canvas'), myOptions);
 
     directionsDisplay.setMap(map);
@@ -98,11 +103,9 @@ function initialize() {
     var transitLayer = new google.maps.TransitLayer();  //дороги
     transitLayer.setMap(map);
 
-
     infoWindow = new google.maps.InfoWindow({
         content: document.getElementById('info-content')
     });
-
     // Create the autocomplete object and associate it with the UI input control.
     // Restrict the search to the default country, and to place type "cities".
     autocomplete = new google.maps.places.Autocomplete(
@@ -111,47 +114,89 @@ function initialize() {
             types: ['(cities)'],
             componentRestrictions: countryRestrict
         });
+
     places = new google.maps.places.PlacesService(map);
-
     google.maps.event.addListener(autocomplete, 'place_changed', onPlaceChanged);
-
     // Add a DOM event listener to react when the user selects a country.
     google.maps.event.addDomListener(document.getElementById('country'), 'change',
         setAutocompleteCountry);
 }
 
-var typePlace = 'lodging'
+
 $(document).ready(function () {
+    $('#trips').on('click', function () {
+        $.ajax({
+            method: 'GET',
+            dataType: 'json',
+            url: '/tripomatic/qwe',
+
+            success: function (data) {
+                for (var i = 0; i < data.length; i++) {
+                    saveCooordinate(new google.maps.LatLng(data[i].location_k, data[i].location_a))
+//                    saveCooordinate(trips)
+//                    console.log('trips', trips)
+                }
+            },
+            error: function (data, textStatus, errorThrown) {
+                console.log('error')
+            }
+        })
+    });
+
+
     $('#id_places li').on('click', function () {
         typePlace = $(this).attr('value')
         search();
     });
 
+    var point_city;
+
     $('table #add_to_trevel').click(function () {
-        saveCooordinate(new google.maps.LatLng(addPlace.geometry.location.k, addPlace.geometry.location.A));
-        console.log('addPlace ', addPlace)
-        parsingPlace(addPlace)
 //        $.ajax({
 //            method: 'GET',
 //            dataType: 'json',
-//            url: '/travels/show',
-//            data: {
-//                add_place: addPlace
-//            },
+//            url: '/Cities/index',
 //            success: function (data) {
-//                console.log(data)
+//                point_city = data
 //            },
 //            error: function (data, textStatus, errorThrown) {
-//                alert('error')
+//                console.log('error')
 //            }
 //        })
+
+//        for (var i = 0; i < point_city.length; i++) {
+//            if (point_city[i].name == parsingCity(place).name) {
+//                console.log('hello', parsingCity(place).name)
+        $.ajax({
+            method: 'GET',
+            dataType: 'json',
+            url: '/Cities/create',
+            data: {
+                city: parsingCity(place),
+                add_place: parsingPlace(addPlace)
+            }
+        })
+//            }
+//        }
+//        saveCooordinate(new google.maps.LatLng(addPlace.geometry.location.k, addPlace.geometry.location.A));
+//
     })
+
 })
+var city = {};
+function parsingCity(obj) {
+    city = {
+        name: obj.name,
+        location_a: obj.geometry.location.A,
+        location_k: obj.geometry.location.k
+    }
+    return city
+}
 var placeObj = {};
 function parsingPlace(obj) {
     placeObj = {
         icon: obj.icon,
-        name: obj.namem,
+        name: obj.name,
         location_a: obj.geometry.location.A,
         location_k: obj.geometry.location.k
     }
@@ -171,9 +216,9 @@ function parsingPlace(obj) {
     } else {
         placeObj['website'] = 'none'
     }
-
-    console.log('PlaceObj  ', placeObj)
+    return placeObj;
 }
+
 
 function search() {
 
@@ -210,8 +255,10 @@ function search() {
 
 
 function saveCooordinate(e) {
+//    console.log('e', e)
 //    placesArray.push(new google.maps.LatLng(e.latLng.k, e.latLng.A));
     placesArray.push(e);
+//    console.log('placesArray', placesArray)
     if (placesArray.length == 2) {
 // Set the country restriction based on user input.
 // Also center and zoom the map on the given country.

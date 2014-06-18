@@ -8,7 +8,7 @@ class CreateTravels < ActiveRecord::Migration
       t.float :rating
       t.text :website
       t.float :location_a
-      t.float :locatio_k
+      t.float :location_k
 
       t.timestamps
     end

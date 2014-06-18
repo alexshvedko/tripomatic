@@ -1,12 +1,16 @@
 Tripomatic::Application.routes.draw do
 
-  resources :travels
+  resource :cities
+  resources :points
 
   devise_for :users
 
   get 'tripomatic/index'
   get 'tripomatic/show'
-  get 'travels/show'
+  get 'tripomatic/qwe'
+  get 'Points/create'
+  get 'Cities/create'
+  get 'Cities/index'
   root to: 'tripomatic#index'
 
   # The priority is based upon order of creation:
