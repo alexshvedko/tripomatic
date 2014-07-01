@@ -21,6 +21,10 @@
 
 </div>
 <% if user_signed_in? %>
-  <button id="trips">My trips</button>
+  <div class="btn-group">
+    <a id="my_trips" class="btn dropdown-toggle" data-toggle="dropdown" href="#"> My trips > </a>
+    <ul id="trips" class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
+    </ul>
+  </div>
 <% end %>
 <!--<button id="trips"></button>-->

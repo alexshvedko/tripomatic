@@ -3,9 +3,9 @@ function onPlaceChanged() {
 //    console.log('sanfr', place)
     if (place.geometry) {
 // Search for hotels in the selected city, within the viewport of the map.
-        map.panTo(place.geometry.location);
-        map.setZoom(15);
-        search();
+//        map.panTo(place.geometry.location);
+//        map.setZoom(15);
+//        search();
     } else {
         document.getElementById('autocomplete').placeholder = 'Enter a city';
     }
@@ -124,25 +124,6 @@ function initialize() {
 
 
 $(document).ready(function () {
-    $('#trips').on('click', function () {
-        $.ajax({
-            method: 'GET',
-            dataType: 'json',
-            url: '/tripomatic/qwe',
-
-            success: function (data) {
-                for (var i = 0; i < data.length; i++) {
-                    saveCooordinate(new google.maps.LatLng(data[i].location_k, data[i].location_a))
-//                    saveCooordinate(trips)
-//                    console.log('trips', trips)
-                }
-            },
-            error: function (data, textStatus, errorThrown) {
-                console.log('error')
-            }
-        })
-    });
-
 
     $('#id_places li').on('click', function () {
         typePlace = $(this).attr('value')
@@ -152,21 +133,6 @@ $(document).ready(function () {
     var point_city;
 
     $('table #add_to_trevel').click(function () {
-//        $.ajax({
-//            method: 'GET',
-//            dataType: 'json',
-//            url: '/Cities/index',
-//            success: function (data) {
-//                point_city = data
-//            },
-//            error: function (data, textStatus, errorThrown) {
-//                console.log('error')
-//            }
-//        })
-
-//        for (var i = 0; i < point_city.length; i++) {
-//            if (point_city[i].name == parsingCity(place).name) {
-//                console.log('hello', parsingCity(place).name)
         $.ajax({
             method: 'GET',
             dataType: 'json',
@@ -176,10 +142,47 @@ $(document).ready(function () {
                 add_place: parsingPlace(addPlace)
             }
         })
-//            }
-//        }
-//        saveCooordinate(new google.maps.LatLng(addPlace.geometry.location.k, addPlace.geometry.location.A));
-//
+        saveCooordinate(new google.maps.LatLng(addPlace.geometry.location.k, addPlace.geometry.location.A));
+    })
+
+    $('#my_trips').on('click', function () {
+        $('#trips').children().remove('li');
+        $.ajax({
+            method: 'GET',
+            dataType: 'json',
+            url: '/Cities/index',
+            success: function (data) {
+                var trips = data
+                for (var i = 0; i < trips.length; i++) {
+                    $('<li></li>').attr('id', trips[i].id).text(trips[i].name).appendTo($('#trips'))
+                    $('<li class="divider"></li>').appendTo($('#trips'))
+                }
+                $('#trips li').on('click', function () {
+                    for (var i = 0; i < trips.length; i++) {
+                        if (trips[i].id == $(this).attr('id')) {
+                            console.log(trips[i])
+                            map.panTo(new google.maps.LatLng(trips[i].location_a, trips[i].location_k));
+//                            map.panTo(new google.maps.LatLng(-0.4906855000000405, 38.3459963));
+//                            map.setZoom(15);
+                            console.info('hello')
+
+                        }
+                    }
+                    var city_id = $(this).attr('id')
+                    $.ajax({
+                        method: 'GET',
+                        dataType: 'json',
+                        url: '/Points/show',
+                        data: {
+                            city_id: city_id
+                        },
+                        success: function (data) {
+//                            console.log(data)
+                        }
+                    })
+                })
+            }
+        })
     })
 
 })

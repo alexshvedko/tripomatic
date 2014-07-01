@@ -9,6 +9,7 @@ Tripomatic::Application.routes.draw do
   get 'tripomatic/show'
   get 'tripomatic/qwe'
   get 'Points/create'
+  get 'Points/show'
   get 'Cities/create'
   get 'Cities/index'
   root to: 'tripomatic#index'
