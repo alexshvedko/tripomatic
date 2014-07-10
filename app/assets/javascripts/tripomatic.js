@@ -219,6 +219,8 @@ $(document).ready(function () {
 
 })
 
+
+
 var city = {};
 function parsingCity(obj) {
     city = {

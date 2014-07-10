@@ -1,4 +1,5 @@
 class TripomaticController < ApplicationController
+
   def index
   end
 
