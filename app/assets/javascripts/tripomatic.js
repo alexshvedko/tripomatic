@@ -1,11 +1,10 @@
 function onPlaceChanged() {
     place = autocomplete.getPlace();
-//    console.log('sanfr', place)
     if (place.geometry) {
 // Search for hotels in the selected city, within the viewport of the map.
-//        map.panTo(place.geometry.location);
-//        map.setZoom(15);
-//        search();
+        map.panTo(place.geometry.location);
+        map.setZoom(15);
+        search();
     } else {
         document.getElementById('autocomplete').placeholder = 'Enter a city';
     }
@@ -14,6 +13,7 @@ function onPlaceChanged() {
 
 // When the user selects a city, get the place details for the city and
 // zoom the map in on the city.
+var request;
 var place;
 var typePlace = 'bar'
 var addPlace;
@@ -24,7 +24,7 @@ var waypts = [];
 var placesArray = [];
 var countryRestrict = { 'country': 'us' };
 var MARKER_PATH = 'https://maps.gstatic.com/intl/en_us/mapfiles/marker_green';
-var trips = {};
+//var trips = {};
 var hostnameRegexp = new RegExp('^https?://.+?/');
 
 var directionsDisplay;
@@ -122,28 +122,46 @@ function initialize() {
         setAutocompleteCountry);
 }
 
-
 $(document).ready(function () {
-
     $('#id_places li').on('click', function () {
         typePlace = $(this).attr('value')
         search();
     });
 
-    var point_city;
+    $('table #add_to_travel').click(function () {
+        var idPoint;
+        if ($('#add_to_travel').text() == 'Remove from plan travel') {
+            $('#add_to_travel').text('Add to plan travel').css('color', 'dark')
+            $.ajax({
+                method: 'DELETE',
+                url: '/Points/destroy',
+                data: {
+                    id: addPlace.id
+                },
+                success: function (data) {
 
-    $('table #add_to_trevel').click(function () {
-        $.ajax({
-            method: 'GET',
-            dataType: 'json',
-            url: '/Cities/create',
-            data: {
-                city: parsingCity(place),
-                add_place: parsingPlace(addPlace)
-            }
-        })
-        saveCooordinate(new google.maps.LatLng(addPlace.geometry.location.k, addPlace.geometry.location.A));
+                }
+            })
+        } else {
+            $.ajax({
+                method: 'GET',
+                dataType: 'json',
+                url: '/Cities/create',
+                data: {
+                    city: JSON.stringify(parsingCity(place)),
+                    add_place: JSON.stringify(parsingPlace(addPlace))
+                },
+                success: function (data) {
+                    console.log('data', data.result.id)
+                    idPoint = data.result.id
+                }
+            })
+            $('#add_to_travel').text('Remove from plan travel').css('color', 'red')
+            var arrKeysAddPlace = Object.keys(addPlace.geometry.location)
+            saveCooordinate(new google.maps.LatLng(addPlace.geometry.location[arrKeysAddPlace[0]], addPlace.geometry.location[arrKeysAddPlace[1]]));
+        }
     })
+
 
     $('#my_trips').on('click', function () {
         $('#trips').children().remove('li');
@@ -160,12 +178,9 @@ $(document).ready(function () {
                 $('#trips li').on('click', function () {
                     for (var i = 0; i < trips.length; i++) {
                         if (trips[i].id == $(this).attr('id')) {
-                            console.log(trips[i])
-                            map.panTo(new google.maps.LatLng(trips[i].location_a, trips[i].location_k));
-//                            map.panTo(new google.maps.LatLng(-0.4906855000000405, 38.3459963));
-//                            map.setZoom(15);
-                            console.info('hello')
-
+                            var arrKeysTrips = Object.keys(trips[i].location)
+                            map.panTo(new google.maps.LatLng(trips[i].location[arrKeysTrips[0]], trips[i].location[arrKeysTrips[1]]))
+                            map.setZoom(15);
                         }
                     }
                     var city_id = $(this).attr('id')
@@ -177,31 +192,52 @@ $(document).ready(function () {
                             city_id: city_id
                         },
                         success: function (data) {
-//                            console.log(data)
+                            var myPoints = data
+                            clearResults();
+                            clearMarkers();
+                            waypts = [];
+                            placesArray = [];
+                            for (var i = 0; i < myPoints.length; i++) {
+                                var arrKeysMyPoints = Object.keys(myPoints[i].location)
+                                var markerIcon = MARKER_PATH + '.png';
+                                markers[i] = new google.maps.Marker({
+                                    position: new google.maps.LatLng(myPoints[i].location[arrKeysMyPoints[0]], myPoints[i].location[arrKeysMyPoints[1]]),
+                                    icon: markerIcon
+                                });
+                                markers[i].placeResult = myPoints[i];
+                                google.maps.event.addListener(markers[i], 'click', showInfoWindowPoints)
+                                setTimeout(dropMarker(i), i * 100);
+                                saveCooordinate(new google.maps.LatLng(myPoints[i].location[arrKeysMyPoints[0]], myPoints[i].location[arrKeysMyPoints[1]]))
+                            }
                         }
                     })
                 })
             }
         })
+
     })
 
 })
+
+function savePoint(){
+
+}
+
 var city = {};
 function parsingCity(obj) {
     city = {
         name: obj.name,
-        location_a: obj.geometry.location.A,
-        location_k: obj.geometry.location.k
+        location: obj.geometry.location
     }
     return city
 }
+
 var placeObj = {};
 function parsingPlace(obj) {
     placeObj = {
         icon: obj.icon,
         name: obj.name,
-        location_a: obj.geometry.location.A,
-        location_k: obj.geometry.location.k
+        location: obj.geometry.location
     }
     if (obj.formatted_phone_number) {
         placeObj['phone_number'] = obj.formatted_phone_number
@@ -224,25 +260,20 @@ function parsingPlace(obj) {
 
 
 function search() {
-
     var search = {
         bounds: map.getBounds(),
         types: [typePlace]
     };
     places.nearbySearch(search, function (results, status) {
-
         if (status == google.maps.places.PlacesServiceStatus.OK) {
             clearResults();
             clearMarkers();
-            // Create a marker for each hotel found, and
-            // assign a letter of the alphabetic to each marker icon.
+            waypts = [];
+            placesArray = [];
             for (var i = 0; i < results.length; i++) {
-//                var markerLetter = String.fromCharCode('A'.charCodeAt(0) + i);
                 var markerIcon = MARKER_PATH + '.png';
-                // Use marker animation to drop the icons incrementally on the map.
                 markers[i] = new google.maps.Marker({
                     position: results[i].geometry.location,
-//                    animation: google.maps.Animation.DROP,
                     icon: markerIcon
                 });
                 markers[i].placeResult = results[i];
@@ -250,22 +281,14 @@ function search() {
                 setTimeout(dropMarker(i), i * 100);
                 addResult(results[i], i);
             }
-//            If the user clicks a hotel marker, show the details of that hotel
-            // in an info window.
         }
     });
 }
 
-
 function saveCooordinate(e) {
-//    console.log('e', e)
-//    placesArray.push(new google.maps.LatLng(e.latLng.k, e.latLng.A));
     placesArray.push(e);
-//    console.log('placesArray', placesArray)
     if (placesArray.length == 2) {
-// Set the country restriction based on user input.
-// Also center and zoom the map on the given country.
-        var request = {
+        request = {
             origin: placesArray[0],
             destination: placesArray[placesArray.length - 1],
             travelMode: google.maps.TravelMode.DRIVING
@@ -277,7 +300,7 @@ function saveCooordinate(e) {
                 stopover: true
             });
         }
-        var request = {
+        request = {
             origin: placesArray[0],
             destination: placesArray[placesArray.length - 1],
             waypoints: waypts,
@@ -358,7 +381,6 @@ function clearResults() {
 
 function showInfoWindow() {
     var marker = this;
-
     places.getDetails({reference: marker.placeResult.reference},
         function (place, status) {
             if (status != google.maps.places.PlacesServiceStatus.OK) {
@@ -369,10 +391,18 @@ function showInfoWindow() {
         });
 }
 
+function showInfoWindowPoints() {
+    var marker = this;
+    infoWindow.open(map, marker);
+    buildIWContent(marker.placeResult);
+}
+
+
 function closeInfoWindow() {
     var marker = this;
     infoWindow.close(map, marker);
 }
+
 // Load the place information into the HTML elements used by the info window.
 function buildIWContent(place) {
     addPlace = place
@@ -421,5 +451,21 @@ function buildIWContent(place) {
     } else {
         document.getElementById('iw-website-row').style.display = 'none';
     }
+    $.ajax({
+        method: 'GET',
+        url: '/Points/index',
+        success: function (data) {
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].name == place.name) {
+                    $('#add_to_travel').text('Remove from plan travel').css('color', 'red')
+                    break
+                } else if (data == null) {
+                    $('#add_to_travel').text('Add to plan travel').css('color', 'dark')
+                } else {
+                    $('#add_to_travel').text('Add to plan travel').css('color', 'dark')
+                }
+            }
+        }
+    })
 }
 google.maps.event.addDomListener(window, 'load', initialize);

@@ -11,14 +11,13 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140618090544) do
+ActiveRecord::Schema.define(:version => 20140710111846) do
 
   create_table "cities", :force => true do |t|
     t.string   "name"
-    t.float    "location_a"
-    t.float    "location_k"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
+    t.text     "location"
   end
 
   create_table "points", :force => true do |t|
@@ -27,11 +26,10 @@ ActiveRecord::Schema.define(:version => 20140618090544) do
     t.string   "phone_number"
     t.float    "rating"
     t.text     "website"
-    t.float    "location_a"
-    t.float    "location_k"
     t.datetime "created_at",   :null => false
     t.datetime "updated_at",   :null => false
     t.integer  "user_city_id"
+    t.text     "location"
   end
 
   create_table "user_cities", :force => true do |t|
@@ -39,7 +37,6 @@ ActiveRecord::Schema.define(:version => 20140618090544) do
     t.integer  "city_id"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
-    t.integer  "point_id"
   end
 
   create_table "users", :force => true do |t|
