@@ -5,13 +5,13 @@ Tripomatic::Application.routes.draw do
 
   devise_for :users
 
-  get 'tripomatic/index'
   get 'tripomatic/show'
-  get 'tripomatic/qwe'
   get 'Points/create'
   get 'Points/show'
+  get 'Points/index'
   get 'Cities/create'
   get 'Cities/index'
+  delete 'Points/destroy'
   root to: 'tripomatic#index'
 
   # The priority is based upon order of creation:

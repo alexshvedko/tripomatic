@@ -1,7 +1,7 @@
 <!--<div style='width: 100%;'>-->
 <!--<div id="directions" style='width: 100%; height: 700px;'></div>-->
 <!--</div>-->
-  <%= render 'trips' %>
+<%= render 'trips' %>
 
 <%= render 'places' %>
 
@@ -61,10 +61,10 @@
       <td id="iw-website"></td>
     </tr>
     <% if user_signed_in? %>
-    <tr class="iw_table_row">
-      <td class="iw_attribute_name" id="add_to_trevel"> Add to plan travel</td>
-    </tr>
-      <% end %>
+      <tr class="iw_table_row">
+        <td colspan="3" id="add_to_travel" align="center"> </td>
+      </tr>
+    <% end %>
   </table>
 </div>
 
