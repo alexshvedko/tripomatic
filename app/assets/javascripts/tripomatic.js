@@ -226,10 +226,12 @@ function parsingCity(obj) {
 
 var placeObj = {};
 function parsingPlace(obj) {
+    console.log('url', obj.url)
     placeObj = {
         icon: obj.icon,
         name: obj.name,
-        location: obj.geometry.location
+        location: obj.geometry.location,
+        url: obj.url
     }
     if (obj.formatted_phone_number) {
         placeObj['phone_number'] = obj.formatted_phone_number
@@ -269,6 +271,7 @@ function search() {
                 });
                 markers[i].placeResult = results[i];
                 google.maps.event.addListener(markers[i], 'click', showInfoWindow)
+
                 setTimeout(dropMarker(i), i * 100);
                 addResult(results[i], i);
             }
@@ -287,8 +290,8 @@ function saveCooordinate(e) {
     } else {
         for (var i = 1; i < placesArray.length - 1; i++) {
             waypts.push({
-                location: placesArray[i],
-                stopover: true
+                location: placesArray[i]
+//                stopover: true
             });
         }
         request = {

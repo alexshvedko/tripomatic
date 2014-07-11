@@ -1,6 +1,9 @@
 class PointsController < ApplicationController
   def index
-    @point = Point.all
+    @point = []
+    @user_city = current_user.user_cities.all.map(&:id)
+    @user_city.each { |i| @point += UserCity.find(i).points }
+
     respond_to do |format|
       format.json { render :json => @point }
     end
