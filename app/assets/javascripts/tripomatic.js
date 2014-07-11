@@ -1,18 +1,14 @@
 function onPlaceChanged() {
     place = autocomplete.getPlace();
     if (place.geometry) {
-// Search for hotels in the selected city, within the viewport of the map.
         map.panTo(place.geometry.location);
         map.setZoom(15);
         search();
     } else {
-        document.getElementById('autocomplete').placeholder = 'Enter a city';
+        $('#autocomplete').placeholder('Enter a city')
     }
-
 }
 
-// When the user selects a city, get the place details for the city and
-// zoom the map in on the city.
 var request;
 var place;
 var typePlace = 'bar'
@@ -24,9 +20,7 @@ var waypts = [];
 var placesArray = [];
 var countryRestrict = { 'country': 'us' };
 var MARKER_PATH = 'https://maps.gstatic.com/intl/en_us/mapfiles/marker_green';
-//var trips = {};
 var hostnameRegexp = new RegExp('^https?://.+?/');
-
 var directionsDisplay;
 var directionsService = new google.maps.DirectionsService();
 
@@ -84,6 +78,7 @@ var countries = {
         zoom: 5
     }
 };
+
 function initialize() {
     var myOptions = {
         zoom: countries['us'].zoom,
@@ -95,30 +90,25 @@ function initialize() {
         streetViewControl: false
     };
     directionsDisplay = new google.maps.DirectionsRenderer({preserveViewport: true, draggable: 1, suppressMarkers: 1});
-
-    map = new google.maps.Map(document.getElementById('map-canvas'), myOptions);
-
+    map = new google.maps.Map($('#map-canvas')[0], myOptions);
     directionsDisplay.setMap(map);
-
     var transitLayer = new google.maps.TransitLayer();  //дороги
     transitLayer.setMap(map);
-
     infoWindow = new google.maps.InfoWindow({
-        content: document.getElementById('info-content')
+        content: $('#info-content')[0]
     });
     // Create the autocomplete object and associate it with the UI input control.
     // Restrict the search to the default country, and to place type "cities".
     autocomplete = new google.maps.places.Autocomplete(
-        /** @type {HTMLInputElement} */(document.getElementById('autocomplete')),
+        ($('#autocomplete')[0]),
         {
             types: ['(cities)'],
             componentRestrictions: countryRestrict
         });
-
     places = new google.maps.places.PlacesService(map);
     google.maps.event.addListener(autocomplete, 'place_changed', onPlaceChanged);
     // Add a DOM event listener to react when the user selects a country.
-    google.maps.event.addDomListener(document.getElementById('country'), 'change',
+    google.maps.event.addDomListener($('#country')[0], 'change',
         setAutocompleteCountry);
 }
 
@@ -129,39 +119,16 @@ $(document).ready(function () {
     });
 
     $('table #add_to_travel').click(function () {
-        var idPoint;
         if ($('#add_to_travel').text() == 'Remove from plan travel') {
             $('#add_to_travel').text('Add to plan travel').css('color', 'dark')
-            $.ajax({
-                method: 'DELETE',
-                url: '/Points/destroy',
-                data: {
-                    id: addPlace.id
-                },
-                success: function (data) {
-
-                }
-            })
+            deletePoint(addPlace)
         } else {
-            $.ajax({
-                method: 'GET',
-                dataType: 'json',
-                url: '/Cities/create',
-                data: {
-                    city: JSON.stringify(parsingCity(place)),
-                    add_place: JSON.stringify(parsingPlace(addPlace))
-                },
-                success: function (data) {
-                    console.log('data', data.result.id)
-                    idPoint = data.result.id
-                }
-            })
+            savePoint(place, addPlace)
             $('#add_to_travel').text('Remove from plan travel').css('color', 'red')
             var arrKeysAddPlace = Object.keys(addPlace.geometry.location)
             saveCooordinate(new google.maps.LatLng(addPlace.geometry.location[arrKeysAddPlace[0]], addPlace.geometry.location[arrKeysAddPlace[1]]));
         }
     })
-
 
     $('#my_trips').on('click', function () {
         $('#trips').children().remove('li');
@@ -183,43 +150,70 @@ $(document).ready(function () {
                             map.setZoom(15);
                         }
                     }
-                    var city_id = $(this).attr('id')
-                    $.ajax({
-                        method: 'GET',
-                        dataType: 'json',
-                        url: '/Points/show',
-                        data: {
-                            city_id: city_id
-                        },
-                        success: function (data) {
-                            var myPoints = data
-                            clearResults();
-                            clearMarkers();
-                            waypts = [];
-                            placesArray = [];
-                            for (var i = 0; i < myPoints.length; i++) {
-                                var arrKeysMyPoints = Object.keys(myPoints[i].location)
-                                var markerIcon = MARKER_PATH + '.png';
-                                markers[i] = new google.maps.Marker({
-                                    position: new google.maps.LatLng(myPoints[i].location[arrKeysMyPoints[0]], myPoints[i].location[arrKeysMyPoints[1]]),
-                                    icon: markerIcon
-                                });
-                                markers[i].placeResult = myPoints[i];
-                                google.maps.event.addListener(markers[i], 'click', showInfoWindowPoints)
-                                setTimeout(dropMarker(i), i * 100);
-                                saveCooordinate(new google.maps.LatLng(myPoints[i].location[arrKeysMyPoints[0]], myPoints[i].location[arrKeysMyPoints[1]]))
-                            }
-                        }
-                    })
+                    var cityId = $(this).attr('id')
+                    getPoints(cityId)
                 })
             }
         })
-
     })
-
 })
 
+function getPoints(cityId) {
+    $.ajax({
+        method: 'GET',
+        dataType: 'json',
+        url: '/Points/show',
+        data: {
+            city_id: cityId
+        },
+        success: function (data) {
+            var myPoints = data
+            clearResults();
+            clearMarkers();
+            waypts = [];
+            placesArray = [];
+            for (var i = 0; i < myPoints.length; i++) {
+                var arrKeysMyPoints = Object.keys(myPoints[i].location)
+                var markerIcon = MARKER_PATH + '.png';
+                markers[i] = new google.maps.Marker({
+                    position: new google.maps.LatLng(myPoints[i].location[arrKeysMyPoints[0]], myPoints[i].location[arrKeysMyPoints[1]]),
+                    icon: markerIcon
+                });
+                markers[i].placeResult = myPoints[i];
+                google.maps.event.addListener(markers[i], 'click', showInfoWindowPoints)
+                setTimeout(dropMarker(i), i * 100);
+                saveCooordinate(new google.maps.LatLng(myPoints[i].location[arrKeysMyPoints[0]], myPoints[i].location[arrKeysMyPoints[1]]))
+            }
+        }
+    })
+}
 
+function deletePoint(addPlace) {
+    $.ajax({
+        method: 'DELETE',
+        url: '/Points/destroy',
+        data: {
+            id: addPlace.id
+        },
+        success: function (data) {
+        }
+    })
+}
+
+function savePoint(place, addPlace) {
+    $.ajax({
+        method: 'GET',
+        dataType: 'json',
+        url: '/Cities/create',
+        data: {
+            city: JSON.stringify(parsingCity(place)),
+            add_place: JSON.stringify(parsingPlace(addPlace))
+        },
+        success: function (data) {
+            idPoint = data.result.id
+        }
+    })
+}
 
 var city = {};
 function parsingCity(obj) {
@@ -255,7 +249,6 @@ function parsingPlace(obj) {
     }
     return placeObj;
 }
-
 
 function search() {
     var search = {
@@ -323,7 +316,7 @@ function clearMarkers() {
 }
 
 function setAutocompleteCountry() {
-    var country = document.getElementById('country').value;
+    var country = $('#country').val();
     if (country == 'all') {
         autocomplete.setComponentRestrictions([]);
         map.setCenter(new google.maps.LatLng(15, 0));
@@ -344,16 +337,14 @@ function dropMarker(i) {
 }
 
 function addResult(result, i) {
-    var results = document.getElementById('results');
+    var results = $('#results')[0];
     var markerLetter = String.fromCharCode('A'.charCodeAt(0) + i);
-
     var markerIcon = MARKER_PATH + markerLetter + '.png';
     var tr = document.createElement('tr');
     tr.style.backgroundColor = (i % 2 == 0 ? '#F0F0F0' : '#FFFFFF');
     tr.onclick = function () {
         google.maps.event.trigger(markers[i], 'click');
     };
-
     var iconTd = document.createElement('td');
     var nameTd = document.createElement('td');
     var icon = document.createElement('img');
@@ -369,7 +360,7 @@ function addResult(result, i) {
 }
 
 function clearResults() {
-    var results = document.getElementById('results');
+    var results = $('#results')[0];
     while (results.childNodes[0]) {
 // Get the place details for a hotel. Show the information in an info window,
 // anchored on the marker for the hotel that the user selected.
@@ -395,31 +386,43 @@ function showInfoWindowPoints() {
     buildIWContent(marker.placeResult);
 }
 
-
 function closeInfoWindow() {
     var marker = this;
     infoWindow.close(map, marker);
 }
 
-// Load the place information into the HTML elements used by the info window.
+function inscriptionAddOrRemove(place){
+    $.ajax({
+        method: 'GET',
+        url: '/Points/index',
+        success: function (data) {
+            if (data.length == 0) {
+                $('#add_to_travel').text('Add to plan travel').css('color', 'dark')
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i].name == place.name) {
+                        $('#add_to_travel').text('Remove from plan travel').css('color', 'red')
+                        break
+                    } else {
+                        $('#add_to_travel').text('Add to plan travel').css('color', 'dark')
+                    }
+                }
+            }
+        }
+    })
+}
+
 function buildIWContent(place) {
     addPlace = place
-    document.getElementById('iw-icon').innerHTML = '<img class="hotelIcon" ' +
-        'src="' + place.icon + '"/>';
-    document.getElementById('iw-url').innerHTML = '<b><a href="' + place.url +
-        '">' + place.name + '</a></b>';
-    document.getElementById('iw-address').textContent = place.vicinity;
+    $('#iw-icon').html('<img class="hotelIcon" ' + 'src="' + place.icon + '"/>')
+    $('#iw-url').html('<b><a href="' + place.url + '">' + place.name + '</a></b>')
+    $('#iw-address').text(place.vicinity)
     if (place.formatted_phone_number) {
-        document.getElementById('iw-phone-row').style.display = '';
-        document.getElementById('iw-phone').textContent =
-            place.formatted_phone_number;
+        $('iw-phone-row').css('display', '')
+        $('#iw-phone').text(place.formatted_phone_number)
     } else {
-        document.getElementById('iw-phone-row').style.display = 'none';
+        $('#iw-phone-row').css('display', 'none')
     }
-    // Assign a five-star rating to the hotel, using a black star ('&#10029;')
-    // to indicate the rating the hotel has earned, and a white star ('&#10025;')
-    // for the rating points not achieved.
-
     if (place.rating) {
         var ratingHtml = '';
         for (var i = 0; i < 5; i++) {
@@ -428,15 +431,12 @@ function buildIWContent(place) {
             } else {
                 ratingHtml += '&#10029;';
             }
-            document.getElementById('iw-rating-row').style.display = '';
-            document.getElementById('iw-rating').innerHTML = ratingHtml;
+            $('#iw-rating-row').css('display', '')
+            $('#iw-rating').html(ratingHtml)
         }
     } else {
-        document.getElementById('iw-rating-row').style.display = 'none';
+        $('iw-rating-row').css('display', 'none')
     }
-    // The regexp isolates the first part of the URL (domain plus subdomain)
-    // to give a short URL for displaying in the info window.
-
     if (place.website) {
         var fullUrl = place.website;
         var website = hostnameRegexp.exec(place.website);
@@ -444,26 +444,11 @@ function buildIWContent(place) {
             website = 'http://' + place.website + '/';
             fullUrl = website;
         }
-        document.getElementById('iw-website-row').style.display = '';
-        document.getElementById('iw-website').textContent = website;
+        $('iw-website-row').css('display', '')
+        $('#iw-website').text(website[0])
     } else {
-        document.getElementById('iw-website-row').style.display = 'none';
+        $('iw-website-row').css('display', 'none')
     }
-    $.ajax({
-        method: 'GET',
-        url: '/Points/index',
-        success: function (data) {
-            for (var i = 0; i < data.length; i++) {
-                if (data[i].name == place.name) {
-                    $('#add_to_travel').text('Remove from plan travel').css('color', 'red')
-                    break
-                } else if (data == null) {
-                    $('#add_to_travel').text('Add to plan travel').css('color', 'dark')
-                } else {
-                    $('#add_to_travel').text('Add to plan travel').css('color', 'dark')
-                }
-            }
-        }
-    })
+    inscriptionAddOrRemove(place)
 }
 google.maps.event.addDomListener(window, 'load', initialize);
