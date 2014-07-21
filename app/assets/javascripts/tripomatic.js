@@ -180,9 +180,11 @@ function getPoints(cityId) {
                     icon: markerIcon
                 });
                 markers[i].placeResult = myPoints[i];
+
                 google.maps.event.addListener(markers[i], 'click', showInfoWindowPoints)
                 setTimeout(dropMarker(i), i * 100);
                 saveCooordinate(new google.maps.LatLng(myPoints[i].location[arrKeysMyPoints[0]], myPoints[i].location[arrKeysMyPoints[1]]))
+
             }
         }
     })
@@ -271,7 +273,6 @@ function search() {
                 });
                 markers[i].placeResult = results[i];
                 google.maps.event.addListener(markers[i], 'click', showInfoWindow)
-
                 setTimeout(dropMarker(i), i * 100);
                 addResult(results[i], i);
             }
@@ -290,8 +291,8 @@ function saveCooordinate(e) {
     } else {
         for (var i = 1; i < placesArray.length - 1; i++) {
             waypts.push({
-                location: placesArray[i]
-//                stopover: true
+                location: placesArray[i],
+                stopover: true
             });
         }
         request = {
@@ -365,8 +366,6 @@ function addResult(result, i) {
 function clearResults() {
     var results = $('#results')[0];
     while (results.childNodes[0]) {
-// Get the place details for a hotel. Show the information in an info window,
-// anchored on the marker for the hotel that the user selected.
         results.removeChild(results.childNodes[0]);
     }
 }
@@ -381,6 +380,11 @@ function showInfoWindow() {
             infoWindow.open(map, marker);
             buildIWContent(place);
         });
+}
+
+function image(x){
+//    console.log('asd', places.getDetails({reference: x.placeResult.reference}))
+   return places.getDetails({reference: x.placeResult.reference})
 }
 
 function showInfoWindowPoints() {

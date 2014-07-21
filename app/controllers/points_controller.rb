@@ -1,4 +1,11 @@
+require 'nokogiri'
+require 'open-uri'
+
 class PointsController < ApplicationController
+  def parsing_image
+    doc = Nokogiri::HTML(open(params[:url]))
+  end
+
   def index
     @point = []
     @user_city = current_user.user_cities.all.map(&:id)
